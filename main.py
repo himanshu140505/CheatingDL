@@ -51,6 +51,7 @@ def upload_file():
             return redirect(url_for('home'))
     return redirect(url_for('home'))
 
+
 @app.route('/download/<filename>')
 def download_file(filename):
     try:
