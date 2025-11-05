@@ -1,0 +1,6 @@
+# Netlify _basic_ configuration: redirect all routes to index.html (useful for SPAs and static sites)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true

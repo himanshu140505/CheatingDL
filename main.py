@@ -2,19 +2,30 @@ from flask import Flask, render_template, request, send_file, redirect, url_for,
 import os
 from werkzeug.utils import secure_filename
 import pathlib
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.secret_key = 'your-secret-key-here'  # Required for flash messages
+# Use environment variable for secret in production
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')  # Required for flash messages
 
 # Create uploads directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'py', 'js', 'html', 'css', 'json'}
 
+# Simple and safer check for allowed file extensions
 def allowed_file(filename):
-    return True  # Allow all file types
+    if not filename or '.' not in filename:
+        return False
+    ext = filename.rsplit('.', 1)[1].lower()
+    return ext in ALLOWED_EXTENSIONS
+
+# Configure CORS allowed origins via environment variable (comma separated)
+allowed_origins_env = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5173,http://localhost:8080,https://localhostnotebook.netlify.app')
+ALLOWED_ORIGINS = [o.strip() for o in allowed_origins_env.split(',') if o.strip()]
+CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
 
 def is_safe_path(basedir, path):
     # Prevent path traversal attacks
@@ -96,4 +107,6 @@ def delete_file(filename):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+    debug_env = os.environ.get('FLASK_DEBUG', '0')
+    debug = debug_env in ('1', 'true', 'True')
+    app.run(host='0.0.0.0', port=port, debug=debug)
